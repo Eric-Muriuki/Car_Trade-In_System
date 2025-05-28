@@ -1,7 +1,7 @@
 <?php
 // user/my_car.php - User's Car Profile Page
 session_start();
-include('../db-connect.php');
+include('../includes/db_connect.php');
 
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -13,7 +13,7 @@ $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'] ?? 'User';
 
 // Fetch user's submitted cars
-$query = "SELECT * FROM user_cars WHERE user_id = $user_id ORDER BY created_at DESC";
+$query = "SELECT * FROM cars WHERE owner_id = $user_id ORDER BY created_at DESC";
 $result = mysqli_query($conn, $query);
 ?>
 <!DOCTYPE html>

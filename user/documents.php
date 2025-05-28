@@ -4,12 +4,12 @@ session_start();
 include('../db-connect.php');
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['id'])) {
     header("Location: ../login.php");
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['id'];
 $upload_dir = "../uploads/documents/";
 $message = "";
 

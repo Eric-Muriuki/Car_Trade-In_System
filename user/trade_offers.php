@@ -1,7 +1,7 @@
 <?php
 // user/trade_offers.php - View trade offers from dealers/users
 session_start();
-include('../db-connect.php');
+include('../includes/db_connect.php'); // Adjusted to your connection file path
 
 // Check login
 if (!isset($_SESSION['user_id'])) {
@@ -13,15 +13,17 @@ $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'] ?? 'User';
 
 // Fetch trade offers for this user
-$query = "SELECT o.*, c.make AS offered_make, c.model AS offered_model, c.year AS offered_year, c.image AS offered_image,
-                 u.name AS from_user
-          FROM trade_offers o
-          JOIN user_cars c ON o.car_id_offered = c.id
-          JOIN users u ON o.from_user_id = u.id
-          WHERE o.to_user_id = $user_id
+$query = "SELECT o.*, c.make AS offered_make, c.model AS offered_model, c.year AS offered_year, c.mileage AS offered_mileage, c.price AS offered_price, c.description AS offered_description
+          FROM trades o
+          JOIN cars c ON o.id = c.id
+          JOIN users u ON o.id = u.id
+          WHERE o.id = ?
           ORDER BY o.created_at DESC";
 
-$result = mysqli_query($conn, $query);
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -53,9 +55,9 @@ $result = mysqli_query($conn, $query);
   <div class="container">
     <h2>Trade Offers Received</h2>
 
-    <?php if (mysqli_num_rows($result) > 0): ?>
+    <?php if ($result->num_rows > 0): ?>
       <div class="offers-list">
-        <?php while ($offer = mysqli_fetch_assoc($result)): ?>
+        <?php while ($offer = $result->fetch_assoc()): ?>
           <div class="offer-box">
             <img src="../uploads/<?= htmlspecialchars($offer['offered_image']) ?>" alt="Offered Car Image">
             <div class="offer-info">

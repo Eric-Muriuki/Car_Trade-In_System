@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('../db-connect.php');
+include('../includes/db_connect.php');
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
@@ -12,7 +12,7 @@ $errors = [];
 $success = "";
 
 // Fetch current user data
-$stmt = $conn->prepare("SELECT username, email, phone FROM users WHERE id = ?");
+$stmt = $conn->prepare("SELECT full_name, email, phone FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -25,13 +25,13 @@ $user = $result->fetch_assoc();
 
 // Handle profile update
 if (isset($_POST['update_profile'])) {
-    $username = trim($_POST['username']);
+    $full_name = trim($_POST['full_name']);
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone']);
 
     // Basic validation
-    if (empty($username)) {
-        $errors[] = "Username is required.";
+    if (empty($full_rname)) {
+        $errors[] = "Fullname is required.";
     }
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "A valid email is required.";
@@ -42,19 +42,19 @@ if (isset($_POST['update_profile'])) {
 
     if (empty($errors)) {
         // Check if email or username already taken by others
-        $stmt_check = $conn->prepare("SELECT id FROM users WHERE (email = ? OR username = ?) AND id != ?");
-        $stmt_check->bind_param("ssi", $email, $username, $user_id);
+        $stmt_check = $conn->prepare("SELECT id FROM users WHERE (email = ? OR full_name = ?) AND id != ?");
+        $stmt_check->bind_param("ssi", $email, $full_name, $user_id);
         $stmt_check->execute();
         $check_res = $stmt_check->get_result();
         if ($check_res->num_rows > 0) {
-            $errors[] = "Username or email already in use by another account.";
+            $errors[] = "Fullname or email already in use by another account.";
         } else {
-            $stmt_update = $conn->prepare("UPDATE users SET username = ?, email = ?, phone = ? WHERE id = ?");
-            $stmt_update->bind_param("sssi", $username, $email, $phone, $user_id);
+            $stmt_update = $conn->prepare("UPDATE users SET fullname = ?, email = ?, phone = ? WHERE id = ?");
+            $stmt_update->bind_param("sssi", $full_name, $email, $phone, $user_id);
             if ($stmt_update->execute()) {
                 $success = "Profile updated successfully.";
                 // Update current values to show in form
-                $user['username'] = $username;
+                $user['full_name'] = $full_name;
                 $user['email'] = $email;
                 $user['phone'] = $phone;
             } else {
@@ -201,8 +201,8 @@ if (isset($_POST['change_password'])) {
         <?php endif; ?>
 
         <form method="POST" action="profile.php" novalidate>
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required value="<?= htmlspecialchars($user['username']) ?>">
+            <label for="fullname">Fullname</label>
+            <input type="text" id="fullname" name="fullname" required value="<?= htmlspecialchars($user['full_name']) ?>">
 
             <label for="email">Email</label>
             <input type="email" id="email" name="email" required value="<?= htmlspecialchars($user['email']) ?>">

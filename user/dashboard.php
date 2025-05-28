@@ -25,7 +25,7 @@ $offerResult = $offerQuery->get_result();
 $offerData = $offerResult->fetch_assoc();
 
 // Fetch active trades
-$tradeQuery = $conn->prepare("SELECT COUNT(*) AS trade_count FROM trades WHERE (buyer_id = ? OR seller_id = ?) AND status != 'Completed'");
+$tradeQuery = $conn->prepare("SELECT COUNT(*) AS trade_count FROM trades WHERE (user_id = ? OR dealer_id = ?) AND status != 'Completed'");
 $tradeQuery->bind_param("ii", $userId, $userId);
 $tradeQuery->execute();
 $tradeResult = $tradeQuery->get_result();
