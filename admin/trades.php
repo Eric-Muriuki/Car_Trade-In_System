@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db-connect.php';
+require_once '../includes/db_connect.php';
 
 // Check admin login
 if (!isset($_SESSION['admin_id'])) {
@@ -13,19 +13,80 @@ $sql = "SELECT t.id AS trade_id,
                t.status, 
                t.created_at, 
                t.updated_at,
-               u.fullname AS user_name, 
+               u.full_name AS user_name, 
                d.business_name AS dealer_name, 
                c.make, c.model, c.year, c.price
         FROM trades t
         JOIN users u ON t.user_id = u.id
         JOIN dealers d ON t.dealer_id = d.id
-        JOIN cars c ON t.car_id = c.id
+        JOIN cars c ON t.user_car_id = c.id
         ORDER BY t.created_at DESC";
 
 $result = $conn->query($sql);
 ?>
 
-<?php include '../includes/header.php'; ?>
+ <style>
+        /* Basic responsive navbar styling */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #212529;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+        }
+        .navbar a {
+            color: #f8f9fa;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+        .navbar a:hover {
+            color: #ffc107;
+        }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .nav-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .container {
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-title">
+        <i class="fas fa-shield-alt"></i> Admin Panel
+    </div>
+    <div class="nav-links">
+        <a href="dashboard.php">Dashboard</a>
+        <a href="users.php">Users</a>
+        <a href="dealers.php">Dealers</a>
+        <a href="cars.php">Listings</a>
+        <a href="trades.php">Trade Logs</a>
+        <a href="reports.php">Reports</a>
+        <a href="messages.php">Support</a>
+        <a href="settings.php">Settings</a>
+        <a href="logout.php" style="color: #dc3545;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
 
 <div class="container" style="max-width:1100px; margin: 40px auto; padding: 20px;">
     <h2>Trade Logs</h2>

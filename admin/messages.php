@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db-connect.php';
+require_once '../includes/db_connect.php';
 
 // Admin auth check
 if (!isset($_SESSION['admin_id'])) {
@@ -15,11 +15,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'], $_PO
     $ticket_id_post = intval($_POST['ticket_id']);
     $reply = trim($_POST['reply_message']);
     if ($reply !== '') {
-        $stmt = $conn->prepare("INSERT INTO support_messages (ticket_id, sender_type, message, created_at) VALUES (?, 'admin', ?, NOW())");
-        $stmt->bind_param("is", $ticket_id_post, $reply);
+        // Fetch the ticket to determine receiver
+        $stmt = $conn->prepare("SELECT user_id, dealer_id FROM support_tickets WHERE id = ?");
+        $stmt->bind_param("i", $ticket_id_post);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($res->num_rows === 0) {
+            echo json_encode(['success' => false, 'message' => 'Ticket not found']);
+            exit();
+        }
+        $ticket = $res->fetch_assoc();
+
+        // Determine receiver type and ID
+        $receiver_type = $ticket['user_id'] ? 'user' : 'dealer';
+        $receiver_id = $ticket['user_id'] ?? $ticket['dealer_id'];
+
+        // Insert reply into messages table
+        $stmt = $conn->prepare("INSERT INTO messages (sender_type, sender_id, receiver_type, receiver_id, trade_id, message) VALUES ('admin', ?, ?, ?, NULL, ?)");
+        $admin_id = $_SESSION['admin_id'];
+        $stmt->bind_param("isiss", $admin_id, $receiver_type, $receiver_id, $reply);
         $stmt->execute();
 
-        // Update ticket status to Pending (if needed)
+        // Update ticket status
         $conn->query("UPDATE support_tickets SET status='Pending' WHERE id=$ticket_id_post");
 
         echo json_encode(['success' => true, 'message' => 'Reply sent']);
@@ -32,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'], $_PO
 
 // Fetch tickets or messages
 if ($ticket_id) {
-    // Get ticket details and messages
+    // Get ticket details
     $stmt = $conn->prepare("SELECT t.*, u.fullname AS user_name, d.business_name AS dealer_name 
                             FROM support_tickets t
                             LEFT JOIN users u ON t.user_id = u.id
@@ -46,9 +63,18 @@ if ($ticket_id) {
     }
     $ticket = $ticket_res->fetch_assoc();
 
-    // Fetch messages for this ticket
-    $msg_stmt = $conn->prepare("SELECT * FROM support_messages WHERE ticket_id = ? ORDER BY created_at ASC");
-    $msg_stmt->bind_param("i", $ticket_id);
+    // Determine sender and receiver ID
+    $partner_type = $ticket['user_id'] ? 'user' : 'dealer';
+    $partner_id = $ticket['user_id'] ?? $ticket['dealer_id'];
+
+    // Fetch messages from messages table where trade_id is NULL (support)
+    $msg_stmt = $conn->prepare("SELECT * FROM messages 
+                                WHERE trade_id IS NULL AND 
+                                    ((sender_type='admin' AND sender_id=?) AND (receiver_type=? AND receiver_id=?)
+                                    OR (sender_type=? AND sender_id=? AND receiver_type='admin'))
+                                ORDER BY sent_at ASC");
+    $admin_id = $_SESSION['admin_id'];
+    $msg_stmt->bind_param("isisi", $admin_id, $partner_type, $partner_id, $partner_type, $partner_id);
     $msg_stmt->execute();
     $messages = $msg_stmt->get_result();
 
@@ -62,7 +88,69 @@ if ($ticket_id) {
 }
 ?>
 
-<?php include '../includes/header.php'; ?>
+
+ <style>
+        /* Basic responsive navbar styling */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #212529;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+        }
+        .navbar a {
+            color: #f8f9fa;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+        .navbar a:hover {
+            color: #ffc107;
+        }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .nav-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .container {
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-title">
+        <i class="fas fa-shield-alt"></i> Admin Panel
+    </div>
+    <div class="nav-links">
+        <a href="dashboard.php">Dashboard</a>
+        <a href="users.php">Users</a>
+        <a href="dealers.php">Dealers</a>
+        <a href="cars.php">Listings</a>
+        <a href="trades.php">Trade Logs</a>
+        <a href="reports.php">Reports</a>
+        <a href="messages.php">Support</a>
+        <a href="settings.php">Settings</a>
+        <a href="logout.php" style="color: #dc3545;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
 
 <div class="container" style="max-width:900px; margin:40px auto; padding:20px;">
     <h2>Support Messages - Admin Panel</h2>

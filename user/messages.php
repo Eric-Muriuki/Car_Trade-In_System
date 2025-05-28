@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('../db_connect.php');
+include('../includes/db_connect.php');
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
@@ -11,11 +11,11 @@ $user_id = $_SESSION['user_id'];
 
 // Fetch all dealers who have messaged this user or whom this user messaged
 $query = "
-    SELECT DISTINCT u.id, u.username 
+    SELECT DISTINCT u.id, u.full_name 
     FROM users u
     JOIN messages m ON ( (m.sender_id = u.id AND m.receiver_id = ?) OR (m.receiver_id = u.id AND m.sender_id = ?) )
-    WHERE u.user_type = 'dealer'
-    ORDER BY u.username
+    WHERE u.full_name = 'dealer'
+    ORDER BY u.full_name
 ";
 
 $stmt = $conn->prepare($query);

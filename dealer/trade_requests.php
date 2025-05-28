@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db-connect.php';
+require_once '../includes/db_connect.php';
 
 // Ensure dealer is logged in
 if (!isset($_SESSION['dealer_id'])) {
@@ -9,100 +9,98 @@ if (!isset($_SESSION['dealer_id'])) {
 }
 
 $dealer_id = $_SESSION['dealer_id'];
+$message = "";
 
-// Fetch trade-in requests (cars listed by users)
-$query = "
-    SELECT c.*, u.full_name, u.email
-    FROM cars c
-    JOIN users u ON c.owner_id = u.id
-    WHERE c.listed_for_trade = 1
-    ORDER BY c.created_at DESC
-";
-$result = $conn->query($query);
+// Handle car deletion
+if (isset($_GET['delete'])) {
+    $car_id = intval($_GET['delete']);
+
+    // Fetch image filename
+    $photo_query = $conn->prepare("SELECT image FROM cars WHERE id = ? AND dealer_id = ?");
+    $photo_query->bind_param("ii", $car_id, $dealer_id);
+    $photo_query->execute();
+    $photo_result = $photo_query->get_result()->fetch_assoc();
+    if ($photo_result && file_exists("../uploads/cars/" . $photo_result['image'])) {
+        unlink("../uploads/cars/" . $photo_result['image']);
+    }
+
+    // Delete car
+    $stmt = $conn->prepare("DELETE FROM cars WHERE id = ? AND dealer_id = ?");
+    $stmt->bind_param("ii", $car_id, $dealer_id);
+    if ($stmt->execute()) {
+        $message = "Car deleted successfully.";
+    } else {
+        $message = "Error deleting car.";
+    }
+}
+
+// Fetch cars listed by this dealer
+$stmt = $conn->prepare("SELECT * FROM cars WHERE dealer_id = ? ORDER BY created_at DESC");
+$stmt->bind_param("i", $dealer_id);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Trade-In Requests - Dealer</title>
+  <title>My Inventory - Dealer</title>
   <link rel="stylesheet" href="../assets/css/style.css">
-  <style>
-    .container {
-      width: 90%;
-      margin: 30px auto;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-    }
-
-    .car-card {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 15px;
-      background: #f9f9f9;
-    }
-
-    .car-card img {
-      width: 200px;
-      height: auto;
-      border-radius: 5px;
-      margin-right: 20px;
-    }
-
-    .car-details {
-      flex: 1;
-    }
-
-    .car-details h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-
-    .car-details p {
-      margin: 5px 0;
-    }
-
-    .btn {
-      padding: 8px 14px;
-      background: #2ecc71;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      text-decoration: none;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .btn:hover {
-      background: #27ae60;
-    }
-  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Trade-In Requests</h2>
+  
 
-    <?php if ($result && $result->num_rows > 0): ?>
-      <?php while ($car = $result->fetch_assoc()): ?>
-        <div class="car-card">
-          <img src="../uploads/cars/<?= htmlspecialchars($car['photo']) ?>" alt="Car">
-          <div class="car-details">
-            <h3><?= htmlspecialchars($car['make']) . ' ' . htmlspecialchars($car['model']) ?> (<?= $car['year'] ?>)</h3>
-            <p><strong>Mileage:</strong> <?= number_format($car['mileage']) ?> km</p>
-            <p><strong>Owner:</strong> <?= htmlspecialchars($car['full_name']) ?> (<?= $car['email'] ?>)</p>
-            <p><strong>Description:</strong> <?= nl2br(htmlspecialchars($car['description'])) ?></p>
-            <a href="send_offer.php?car_id=<?= $car['id'] ?>" class="btn">Send Trade Offer</a>
-          </div>
-        </div>
-      <?php endwhile; ?>
-    <?php else: ?>
-      <p>No trade-in requests available at the moment.</p>
+  <div class="container">
+    <h2>My Inventory</h2>
+
+    <?php if ($message): ?>
+      <div class="message"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
+
+    <a href="add_car.php" class="btn add-btn">+ Add New Car</a>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Photo</th>
+          <th>Make & Model</th>
+          <th>Year</th>
+          <th>Mileage</th>
+          <th>Price (KES)</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if ($result->num_rows > 0): ?>
+          <?php while ($car = $result->fetch_assoc()): ?>
+            <tr>
+              <td>
+                <?php if (!empty($car['image'])): ?>
+                  <img src="../uploads/cars/<?= htmlspecialchars($car['image']) ?>" alt="Car">
+                <?php else: ?>
+                  <span>No image</span>
+                <?php endif; ?>
+              </td>
+              <td><?= htmlspecialchars($car['make'] . ' ' . $car['model']) ?></td>
+              <td><?= htmlspecialchars($car['year']) ?></td>
+              <td><?= number_format($car['mileage']) ?> km</td>
+              <td>KES <?= number_format($car['price'], 2) ?></td>
+              <td><?= ucfirst($car['status']) ?></td>
+              <td>
+                <a href="edit_car.php?id=<?= $car['id'] ?>" class="btn edit-btn">Edit</a>
+                <a href="?delete=<?= $car['id'] ?>" onclick="return confirm('Are you sure you want to delete this car?');" class="btn delete-btn">Delete</a>
+              </td>
+            </tr>
+          <?php endwhile; ?>
+        <?php else: ?>
+          <tr><td colspan="7">You have no cars listed yet.</td></tr>
+        <?php endif; ?>
+      </tbody>
+    </table>
   </div>
+
+  
 </body>
 </html>

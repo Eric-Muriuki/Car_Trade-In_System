@@ -1,15 +1,15 @@
 <?php
 // user/documents.php - Upload documents
 session_start();
-include('../db-connect.php');
+include('../includes/db_connect.php');
 
 // Check if user is logged in
-if (!isset($_SESSION['id'])) {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
-$user_id = $_SESSION['id'];
+$user_id = $_SESSION['user_id'];
 $upload_dir = "../uploads/documents/";
 $message = "";
 
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         move_uploaded_file($_FILES['service']['tmp_name'], $service_path)
     ) {
         // Save to DB
-        $stmt = $conn->prepare("INSERT INTO user_documents (user_id, logbook, ntsa_results, service_history) VALUES (?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO documents (user_id, logbook, ntsa_results, service_history) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("isss", $user_id, $logbook_path, $ntsa_path, $service_path);
         $stmt->execute();
         $message = "Documents uploaded successfully!";

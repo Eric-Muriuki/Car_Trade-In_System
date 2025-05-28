@@ -1,121 +1,150 @@
 <?php
-session_start();
-require_once '../includes/db-connect.php';
+// Connect to database
+require_once '../includes/db_connect.php'; // Adjust path as needed
 
-// Check admin login
-if (!isset($_SESSION['admin_id'])) {
-    header("Location: ../login.php");
-    exit();
-}
-
-// Handle approve/reject actions for pending dealers
+// Handle approval request
 if (isset($_GET['approve_id'])) {
     $approve_id = intval($_GET['approve_id']);
-    $stmt = $conn->prepare("UPDATE users SET is_approved = 1 WHERE id = ? AND user_type = 'dealer'");
-    $stmt->bind_param("i", $approve_id);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: dealers.php");
-    exit();
+    $conn->query("UPDATE dealers SET approved = TRUE WHERE id = $approve_id");
+    header("Location: dealers.php"); // Redirect to avoid resubmission
+    exit;
 }
 
-if (isset($_GET['reject_id'])) {
-    $reject_id = intval($_GET['reject_id']);
-    $stmt = $conn->prepare("UPDATE users SET is_approved = -1 WHERE id = ? AND user_type = 'dealer'");
-    $stmt->bind_param("i", $reject_id);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: dealers.php");
-    exit();
-}
-
-// Fetch pending dealers (is_approved = 0)
-$sql_pending = "SELECT id, fullname, email, phone, kra_pin, created_at FROM users WHERE user_type = 'dealer' AND is_approved = 0 ORDER BY created_at DESC";
-$result_pending = $conn->query($sql_pending);
-
-// Fetch all approved or rejected dealers (is_approved = 1 or -1)
-$sql_all = "SELECT id, fullname, email, phone, kra_pin, is_approved, created_at FROM users WHERE user_type = 'dealer' AND is_approved IN (1, -1) ORDER BY created_at DESC";
-$result_all = $conn->query($sql_all);
-
+// Fetch all dealers
+$result = $conn->query("SELECT id, business_name, contact_person, email, phone, approved FROM dealers ORDER BY created_at DESC");
 ?>
 
-<?php include '../includes/header.php'; ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Dealers List</title>
+<style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .btn-approve {
+        background-color: #4CAF50;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .btn-approve:hover {
+        background-color: #45a049;
+    }
+</style>
+</head>
+<body>
+     <style>
+        /* Basic responsive navbar styling */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #212529;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+        }
+        .navbar a {
+            color: #f8f9fa;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+        .navbar a:hover {
+            color: #ffc107;
+        }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .nav-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .container {
+            padding: 20px;
+        }
 
-<div class="container" style="max-width: 1000px; margin: 40px auto; padding: 20px;">
-    <h2>Manage Dealers</h2>
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
 
-    <section style="margin-bottom: 40px;">
-        <h3>Pending Dealer Accounts</h3>
-        <?php if ($result_pending && $result_pending->num_rows > 0): ?>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                <thead>
-                    <tr style="background-color: #ffc107; color: #000;">
-                        <th style="padding: 10px; border: 1px solid #ddd;">ID</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Full Name</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Email</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Phone</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">KRA PIN</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Registered On</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($dealer = $result_pending->fetch_assoc()): ?>
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['id']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['fullname']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['email']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['phone']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['kra_pin']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= date('d M Y', strtotime($dealer['created_at'])) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">
-                                <a href="dealers.php?approve_id=<?= $dealer['id'] ?>" style="color: green; text-decoration:none;" onclick="return confirm('Approve this dealer?');">Approve</a> | 
-                                <a href="dealers.php?reject_id=<?= $dealer['id'] ?>" style="color: red; text-decoration:none;" onclick="return confirm('Reject this dealer?');">Reject</a>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <p>No pending dealer accounts found.</p>
-        <?php endif; ?>
-    </section>
-
-    <section>
-        <h3>Approved / Rejected Dealers</h3>
-        <?php if ($result_all && $result_all->num_rows > 0): ?>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                <thead>
-                    <tr style="background-color: #17a2b8; color: #fff;">
-                        <th style="padding: 10px; border: 1px solid #ddd;">ID</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Full Name</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Email</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Phone</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">KRA PIN</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Status</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Registered On</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($dealer = $result_all->fetch_assoc()): ?>
-                        <tr style="background-color: <?= $dealer['is_approved'] == 1 ? '#d4edda' : '#f8d7da' ?>;">
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['id']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['fullname']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['email']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['phone']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($dealer['kra_pin']) ?></td>
-                            <td style="padding: 10px; border: 1px solid #ddd; color: <?= $dealer['is_approved'] == 1 ? 'green' : 'red' ?>;">
-                                <?= $dealer['is_approved'] == 1 ? 'Approved' : 'Rejected' ?>
-                            </td>
-                            <td style="padding: 10px; border: 1px solid #ddd;"><?= date('d M Y', strtotime($dealer['created_at'])) ?></td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <p>No approved or rejected dealers found.</p>
-        <?php endif; ?>
-    </section>
+<div class="navbar">
+    <div class="nav-title">
+        <i class="fas fa-shield-alt"></i> Admin Panel
+    </div>
+    <div class="nav-links">
+        <a href="dashboard.php">Dashboard</a>
+        <a href="users.php">Users</a>
+        <a href="dealers.php">Dealers</a>
+        <a href="cars.php">Listings</a>
+        <a href="trades.php">Trade Logs</a>
+        <a href="reports.php">Reports</a>
+        <a href="messages.php">Support</a>
+        <a href="settings.php">Settings</a>
+        <a href="logout.php" style="color: #dc3545;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<h2>Dealers List</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Business Name</th>
+            <th>Contact Person</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Approved</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+    <?php if ($result && $result->num_rows > 0): ?>
+        <?php while ($row = $result->fetch_assoc()): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($row['id']); ?></td>
+                <td><?php echo htmlspecialchars($row['business_name']); ?></td>
+                <td><?php echo htmlspecialchars($row['contact_person']); ?></td>
+                <td><?php echo htmlspecialchars($row['email']); ?></td>
+                <td><?php echo htmlspecialchars($row['phone']); ?></td>
+                <td><?php echo $row['approved'] ? "Yes" : "No"; ?></td>
+                <td>
+                    <?php if (!$row['approved']): ?>
+                        <a 
+                          href="dealers.php?approve_id=<?php echo $row['id']; ?>" 
+                          class="btn-approve"
+                          onclick="return confirm('Are you sure you want to approve this dealer?');"
+                        >Approve</a>
+                    <?php else: ?>
+                        <!-- Already approved, no button -->
+                        &mdash;
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+    <?php else: ?>
+        <tr><td colspan="7">No dealers found.</td></tr>
+    <?php endif; ?>
+    </tbody>
+</table>
+
+</body>
+</html>

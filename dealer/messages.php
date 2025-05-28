@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db-connect.php';
+require_once '../includes/db_connect.php';
 
 // Ensure dealer is logged in
 if (!isset($_SESSION['dealer_id'])) {
@@ -14,11 +14,14 @@ $dealer_id = $_SESSION['dealer_id'];
 $users_sql = "
     SELECT DISTINCT u.id, u.full_name
     FROM messages m
-    JOIN users u ON (m.sender_id = u.id AND m.sender_role = 'user') 
-                  OR (m.receiver_id = u.id AND m.receiver_role = 'user')
-    WHERE (m.sender_id = ? AND m.sender_role = 'dealer') 
-       OR (m.receiver_id = ? AND m.receiver_role = 'dealer')
-    ORDER BY u.full_name
+    JOIN users u ON m.sender_id = u.id
+    WHERE m.receiver_id = ?
+    UNION
+    SELECT DISTINCT u.id, u.full_name
+    FROM messages m
+    JOIN users u ON m.receiver_id = u.id
+    WHERE m.sender_id = ?
+    ORDER BY full_name
 ";
 $stmt_users = $conn->prepare($users_sql);
 $stmt_users->bind_param("ii", $dealer_id, $dealer_id);
@@ -33,21 +36,30 @@ if ($chat_user_id > 0) {
     $msg_sql = "
         SELECT * FROM messages 
         WHERE 
-            (sender_id = ? AND sender_role = 'dealer' AND receiver_id = ? AND receiver_role = 'user')
-         OR (sender_id = ? AND sender_role = 'user' AND receiver_id = ? AND receiver_role = 'dealer')
+            (sender_id = ? AND receiver_id = ?)
+         OR (sender_id = ? AND receiver_id = ?)
         ORDER BY created_at ASC
     ";
     $stmt_msg = $conn->prepare($msg_sql);
     $stmt_msg->bind_param("iiii", $dealer_id, $chat_user_id, $chat_user_id, $dealer_id);
     $stmt_msg->execute();
     $messages = $stmt_msg->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // Fetch the chat user's full name to display in header
+    $user_stmt = $conn->prepare("SELECT full_name FROM users WHERE id = ?");
+    $user_stmt->bind_param("i", $chat_user_id);
+    $user_stmt->execute();
+    $user_result = $user_stmt->get_result();
+    $chat_user_name = $user_result->fetch_assoc()['full_name'] ?? 'Customer';
+} else {
+    $chat_user_name = '';
 }
 
 // Handle sending a new message
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $chat_user_id > 0) {
     $message = trim($_POST['message']);
     if ($message !== '') {
-        $insert_sql = "INSERT INTO messages (sender_id, receiver_id, sender_role, receiver_role, message) VALUES (?, ?, 'dealer', 'user', ?)";
+        $insert_sql = "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)";
         $stmt_insert = $conn->prepare($insert_sql);
         $stmt_insert->bind_param("iis", $dealer_id, $chat_user_id, $message);
         $stmt_insert->execute();
@@ -76,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $chat_u
       background: #f7f7f7;
       border-right: 1px solid #ccc;
       padding: 10px;
+      height: 600px;
+      overflow-y: auto;
     }
 
     .user-list h3 {
@@ -91,10 +105,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $chat_u
       color: #333;
     }
 
+    .user-item a.active {
+      font-weight: bold;
+      color: #007BFF;
+    }
+
     .chat-box {
       width: 75%;
       padding: 20px;
       background: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 600px;
+    }
+
+    .chat-history {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      background: #fafafa;
+      border-radius: 6px;
     }
 
     .message {
@@ -103,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $chat_u
       border-radius: 6px;
       max-width: 60%;
       clear: both;
+      word-wrap: break-word;
     }
 
     .sent {
@@ -117,14 +150,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $chat_u
       text-align: left;
     }
 
+    .message small {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.8em;
+      color: #555;
+    }
+
     .message-form {
-      margin-top: 20px;
+      margin-top: auto;
     }
 
     .message-form textarea {
       width: 100%;
       padding: 10px;
       height: 80px;
+      resize: vertical;
+      font-size: 1em;
     }
 
     .message-form button {
@@ -133,6 +175,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $chat_u
       background: #333;
       color: #fff;
       border: none;
+      cursor: pointer;
+    }
+
+    .message-form button:hover {
+      background: #555;
     }
   </style>
 </head>
@@ -142,19 +189,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $chat_u
     <h3>Customers</h3>
     <?php while ($user = $users_result->fetch_assoc()): ?>
       <div class="user-item">
-        <a href="?user_id=<?= $user['id'] ?>"><?= htmlspecialchars($user['full_name']) ?></a>
+        <a href="?user_id=<?= $user['id'] ?>" <?= ($user['id'] == $chat_user_id) ? 'class="active"' : '' ?>>
+          <?= htmlspecialchars($user['full_name']) ?>
+        </a>
       </div>
     <?php endwhile; ?>
   </div>
 
   <div class="chat-box">
     <?php if ($chat_user_id > 0): ?>
-      <h3>Chat with <?= htmlspecialchars($_GET['user_name'] ?? 'Customer') ?></h3>
+      <h3>Chat with <?= htmlspecialchars($chat_user_name) ?></h3>
 
       <div class="chat-history">
+        <?php if (count($messages) === 0): ?>
+          <p>No messages yet. Start the conversation!</p>
+        <?php endif; ?>
         <?php foreach ($messages as $msg): ?>
-          <div class="message <?= $msg['sender_role'] === 'dealer' ? 'sent' : 'received' ?>">
-            <?= nl2br(htmlspecialchars($msg['message'])) ?><br>
+          <div class="message <?= ($msg['sender_id'] == $dealer_id) ? 'sent' : 'received' ?>">
+            <?= nl2br(htmlspecialchars($msg['message'])) ?>
             <small><?= date('d M Y H:i', strtotime($msg['created_at'])) ?></small>
           </div>
         <?php endforeach; ?>

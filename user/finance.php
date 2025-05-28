@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('../db-connect.php');
+include('../includes/db_connect.php');
 
 // Check if logged in
 if (!isset($_SESSION['user_id'])) {
@@ -10,11 +10,12 @@ if (!isset($_SESSION['user_id'])) {
 
 // Fetch finance partners and their plans
 $query = "
-SELECT fp.id AS partner_id, fp.name AS partner_name, fp.logo, fp.description,
-       fpl.id AS plan_id, fpl.plan_name, fpl.duration_months, fpl.interest_rate, fpl.min_amount, fpl.max_amount
+SELECT fp.id AS partner_id, fp.name AS partner_name, fp.contact_info,
+       fpl.id AS plan_id, fpl.plan_name, fpl.repayment_period_months
+       , fpl.interest_rate
 FROM finance_partners fp
 LEFT JOIN finance_plans fpl ON fp.id = fpl.partner_id
-ORDER BY fp.name, fpl.duration_months
+ORDER BY fp.name, fpl.repayment_period_months
 ";
 
 $result = mysqli_query($conn, $query);

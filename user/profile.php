@@ -49,7 +49,7 @@ if (isset($_POST['update_profile'])) {
         if ($check_res->num_rows > 0) {
             $errors[] = "Fullname or email already in use by another account.";
         } else {
-            $stmt_update = $conn->prepare("UPDATE users SET fullname = ?, email = ?, phone = ? WHERE id = ?");
+            $stmt_update = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
             $stmt_update->bind_param("sssi", $full_name, $email, $phone, $user_id);
             if ($stmt_update->execute()) {
                 $success = "Profile updated successfully.";
@@ -201,8 +201,8 @@ if (isset($_POST['change_password'])) {
         <?php endif; ?>
 
         <form method="POST" action="profile.php" novalidate>
-            <label for="fullname">Fullname</label>
-            <input type="text" id="fullname" name="fullname" required value="<?= htmlspecialchars($user['full_name']) ?>">
+            <label for="full_name">Fullname</label>
+            <input type="text" id="fullname" name="full_name" required value="<?= htmlspecialchars($user['full_name']) ?>">
 
             <label for="email">Email</label>
             <input type="email" id="email" name="email" required value="<?= htmlspecialchars($user['email']) ?>">

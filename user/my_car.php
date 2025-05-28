@@ -55,7 +55,7 @@ $result = mysqli_query($conn, $query);
             <div class="car-info">
               <h3><?= htmlspecialchars($car['make'] . ' ' . $car['model']) ?> (<?= $car['year'] ?>)</h3>
               <p><strong>Price:</strong> KES <?= number_format($car['price']) ?></p>
-              <p><strong>Condition:</strong> <?= htmlspecialchars($car['condition']) ?></p>
+              <p><strong>Condition:</strong> <?= htmlspecialchars($car['car_condition']) ?></p>
               <p><strong>Mileage:</strong> <?= number_format($car['mileage']) ?> km</p>
               <a href="edit_car.php?id=<?= $car['id'] ?>" class="btn">Edit</a>
               <a href="delete_car.php?id=<?= $car['id'] ?>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this car?');">Delete</a>

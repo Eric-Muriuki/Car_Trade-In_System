@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db-connect.php';
+require_once '../includes/db_connect.php';
 
 // Check admin login
 if (!isset($_SESSION['admin_id'])) {
@@ -29,14 +29,72 @@ if (isset($_GET['unblock_id'])) {
     exit();
 }
 
-// Fetch all users and dealers
-$sql = "SELECT id, fullname, email, user_type, is_blocked, created_at FROM users ORDER BY created_at DESC";
+// Fetch all users
+$sql = "SELECT id, full_name, email, phone, user_type, is_blocked, created_at FROM users ORDER BY created_at DESC";
 $result = $conn->query($sql);
-
 ?>
+ <style>
+        /* Basic responsive navbar styling */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #212529;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+        }
+        .navbar a {
+            color: #f8f9fa;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+        .navbar a:hover {
+            color: #ffc107;
+        }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .nav-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .container {
+            padding: 20px;
+        }
 
-<?php include '../includes/header.php'; ?>
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
 
+<div class="navbar">
+    <div class="nav-title">
+        <i class="fas fa-shield-alt"></i> Admin Panel
+    </div>
+    <div class="nav-links">
+        <a href="dashboard.php">Dashboard</a>
+        <a href="users.php">Users</a>
+        <a href="dealers.php">Dealers</a>
+        <a href="cars.php">Listings</a>
+        <a href="trades.php">Trade Logs</a>
+        <a href="reports.php">Reports</a>
+        <a href="messages.php">Support</a>
+        <a href="settings.php">Settings</a>
+        <a href="logout.php" style="color: #dc3545;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
 <div class="container" style="max-width: 960px; margin: 40px auto; padding: 20px;">
     <h2>Manage Users</h2>
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -56,7 +114,7 @@ $result = $conn->query($sql);
                 <?php while ($user = $result->fetch_assoc()): ?>
                     <tr style="background-color: <?= $user['is_blocked'] ? '#f8d7da' : '#fff' ?>;">
                         <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($user['id']) ?></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($user['fullname']) ?></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($user['full_name']) ?></td>
                         <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($user['email']) ?></td>
                         <td style="padding: 10px; border: 1px solid #ddd; text-transform: capitalize;"><?= htmlspecialchars($user['user_type']) ?></td>
                         <td style="padding: 10px; border: 1px solid #ddd; color: <?= $user['is_blocked'] ? 'red' : 'green' ?>;">

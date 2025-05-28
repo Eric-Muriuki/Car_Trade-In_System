@@ -1,7 +1,7 @@
 <?php
 // user/trades.php - View accepted or completed trades
 session_start();
-include('../db-connect.php');
+include('../includes/db_connect.php');
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -13,20 +13,23 @@ $user_id = $_SESSION['user_id'];
 
 // Fetch accepted or completed trades where user is involved
 $query = "
-SELECT t.*, 
-       u1.name AS from_user_name, 
-       u2.name AS to_user_name,
-       c1.make AS offered_make, c1.model AS offered_model, c1.year AS offered_year, c1.image AS offered_image,
-       c2.make AS requested_make, c2.model AS requested_model, c2.year AS requested_year, c2.image AS requested_image
-FROM trade_offers t
-JOIN users u1 ON t.from_user_id = u1.id
-JOIN users u2 ON t.to_user_id = u2.id
-JOIN user_cars c1 ON t.car_id_offered = c1.id
-JOIN user_cars c2 ON t.car_id_requested = c2.id
-WHERE (t.from_user_id = $user_id OR t.to_user_id = $user_id)
-AND t.status IN ('accepted', 'completed')
-ORDER BY t.created_at DESC
+SELECT o.*, 
+       u.full_name AS user_full_name,
+       d.business_name AS dealer_name,
+       c1.make AS user_car_make, c1.model AS user_car_model, c1.year AS user_car_year, c1.image AS user_car_image,
+       c2.make AS dealer_car_make, c2.model AS dealer_car_model, c2.year AS dealer_car_year, c2.image AS dealer_car_image
+FROM offers o
+JOIN trades t ON o.trade_id = t.id
+JOIN users u ON t.user_id = u.id
+JOIN dealers d ON t.dealer_id = d.id
+JOIN cars c1 ON t.user_car_id = c1.id
+LEFT JOIN cars c2 ON t.dealer_car_id = c2.id
+WHERE (t.user_id = $user_id)
+AND o.status IN ('accepted', 'completed')
+ORDER BY o.created_at DESC
 ";
+
+
 
 $result = mysqli_query($conn, $query);
 ?>

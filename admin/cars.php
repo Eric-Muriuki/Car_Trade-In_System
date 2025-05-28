@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once '../includes/db-connect.php';
+require_once '../includes/db_connect.php';
 
-// Check admin login
+// Check if admin is logged in
 if (!isset($_SESSION['admin_id'])) {
     header("Location: ../login.php");
     exit();
@@ -41,17 +41,78 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// Fetch all cars with user info
+// Fetch all cars with owner info
 $sql = "SELECT cars.id, cars.make, cars.model, cars.year, cars.price, cars.is_approved, cars.created_at,
         users.fullname, users.email
         FROM cars
-        JOIN users ON cars.user_id = users.id
+        JOIN users ON cars.owner_id = users.id
         ORDER BY cars.created_at DESC";
 
 $result = $conn->query($sql);
 ?>
 
-<?php include '../includes/header.php'; ?>
+ <style>
+        /* Basic responsive navbar styling */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #212529;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+        }
+        .navbar a {
+            color: #f8f9fa;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+        .navbar a:hover {
+            color: #ffc107;
+        }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .nav-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .container {
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-title">
+        <i class="fas fa-shield-alt"></i> Admin Panel
+    </div>
+    <div class="nav-links">
+        <a href="dashboard.php">Dashboard</a>
+        <a href="users.php">Users</a>
+        <a href="dealers.php">Dealers</a>
+        <a href="cars.php">Listings</a>
+        <a href="trades.php">Trade Logs</a>
+        <a href="reports.php">Reports</a>
+        <a href="messages.php">Support</a>
+        <a href="settings.php">Settings</a>
+        <a href="logout.php" style="color: #dc3545;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
 
 <div class="container" style="max-width: 1100px; margin: 40px auto; padding: 20px;">
     <h2>Manage Car Listings</h2>
@@ -65,7 +126,7 @@ $result = $conn->query($sql);
                 <th style="padding: 10px; border: 1px solid #ddd;">Model</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Year</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Price (Ksh)</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Listed By</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Owner</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Email</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Status</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Listed On</th>

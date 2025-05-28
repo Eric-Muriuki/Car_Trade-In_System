@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db-connect.php';
+require_once '../includes/db_connect.php';
 
 // Ensure dealer is logged in
 if (!isset($_SESSION['dealer_id'])) {
@@ -15,18 +15,20 @@ $message = "";
 if (isset($_GET['delete'])) {
     $car_id = intval($_GET['delete']);
 
-    // Delete photo from server
-    $photo_query = $conn->prepare("SELECT photo FROM cars WHERE id = ? AND dealer_id = ?");
+    // Delete image from server
+    $photo_query = $conn->prepare("SELECT image FROM cars WHERE id = ? AND dealer_id = ?");
     $photo_query->bind_param("ii", $car_id, $dealer_id);
     $photo_query->execute();
     $photo_result = $photo_query->get_result()->fetch_assoc();
-    if ($photo_result && file_exists("../uploads/cars/" . $photo_result['photo'])) {
-        unlink("../uploads/cars/" . $photo_result['photo']);
+
+    if ($photo_result && !empty($photo_result['image']) && file_exists("../uploads/cars/" . $photo_result['image'])) {
+        unlink("../uploads/cars/" . $photo_result['image']);
     }
 
     // Delete car from DB
     $stmt = $conn->prepare("DELETE FROM cars WHERE id = ? AND dealer_id = ?");
     $stmt->bind_param("ii", $car_id, $dealer_id);
+
     if ($stmt->execute()) {
         $message = "Car deleted successfully.";
     } else {
@@ -40,6 +42,7 @@ $stmt->bind_param("i", $dealer_id);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
