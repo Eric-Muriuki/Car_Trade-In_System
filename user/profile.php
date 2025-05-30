@@ -30,7 +30,7 @@ if (isset($_POST['update_profile'])) {
     $phone = trim($_POST['phone']);
 
     // Basic validation
-    if (empty($full_rname)) {
+    if (empty($full_name)) {
         $errors[] = "Fullname is required.";
     }
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -106,65 +106,220 @@ if (isset($_POST['change_password'])) {
 <head>
     <meta charset="UTF-8" />
     <title>My Profile | SwapRide Kenya</title>
-    <link rel="stylesheet" href="../assets/css/style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
+        /* Color palette */
+        :root {
+            --red-primary: #FE0000;
+            --red-medium: #AF0000;
+            --red-light: #FF9B9B;
+            --red-dark: #730000;
+            --blue-dark: #00232A;
+            --off-white: #FFFFFA;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--red-light), var(--off-white));
+            color: var(--blue-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            width: 90%;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+        header.header {
+            background: var(--red-primary);
+            padding: 15px 0;
+            box-shadow: 0 4px 12px rgba(254,0,0,0.6);
+            user-select: none;
+        }
+        header .logo {
+            color: var(--off-white);
+            margin: 0;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 0.07em;
+            font-family: 'Segoe UI Black', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        nav ul.nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        nav ul.nav-links li a {
+            color: var(--off-white);
+            text-decoration: none;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 25px;
+            background: var(--red-medium);
+            box-shadow: 0 3px 8px rgba(175,0,0,0.6);
+            transition: background-color 0.3s ease;
+        }
+        nav ul.nav-links li a:hover,
+        nav ul.nav-links li a.active {
+            background: var(--red-dark);
+            box-shadow: 0 5px 15px var(--red-dark);
+        }
+
+        section.section {
+            flex-grow: 1;
+            padding: 25px 0;
+        }
         .form-container {
-            max-width: 600px;
-            margin: 30px auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: #fff;
+            background: var(--off-white);
+            padding: 30px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(254,0,0,0.2);
         }
+
         h2 {
-            margin-bottom: 20px;
-            color: #007bff;
+            margin-bottom: 25px;
+            color: var(--red-primary);
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: 0.05em;
         }
+
         form label {
             display: block;
-            margin: 15px 0 5px;
-            font-weight: 600;
+            margin: 15px 0 6px;
+            font-weight: 700;
+            color: var(--red-dark);
+            font-size: 1rem;
         }
-        input[type="text"], input[type="email"], input[type="password"], input[type="tel"] {
+        input[type="text"], 
+        input[type="email"], 
+        input[type="password"], 
+        input[type="tel"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #aaa;
-            border-radius: 5px;
-            font-size: 1em;
+            padding: 12px 15px;
+            border: 2px solid var(--red-medium);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-weight: 600;
+            color: var(--blue-dark);
+            background: var(--off-white);
         }
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="tel"]:focus {
+            border-color: var(--red-primary);
+            outline: none;
+            box-shadow: 0 0 8px var(--red-light);
+        }
+
         button {
-            margin-top: 20px;
-            padding: 12px 25px;
-            background: #007bff;
-            color: white;
+            margin-top: 30px;
+            width: 100%;
+            padding: 14px 0;
+            background: var(--red-primary);
+            color: var(--off-white);
+            font-weight: 900;
+            font-size: 1.1rem;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             cursor: pointer;
-            font-size: 1em;
+            box-shadow: 0 5px 20px rgba(254,0,0,0.5);
+            transition: background-color 0.4s ease, box-shadow 0.4s ease;
+            user-select: none;
         }
-        button:hover {
-            background: #0056b3;
+        button:hover,
+        button:focus {
+            background: var(--red-dark);
+            box-shadow: 0 8px 30px var(--red-dark);
+            outline: none;
         }
+
         .messages {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            line-height: 1.3;
+            user-select: text;
         }
         .error {
-            background: #f8d7da;
-            color: #842029;
-            border: 1px solid #f5c2c7;
+            background: #FDECEA;
+            color: #720000;
+            border: 1.5px solid #F99595;
         }
         .success {
-            background: #d1e7dd;
-            color: #0f5132;
-            border: 1px solid #badbcc;
+            background: #DFF2E1;
+            color: #065F46;
+            border: 1.5px solid #A5D6A7;
         }
+
         .section-divider {
             margin: 40px 0 20px;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 2px solid var(--red-light);
+        }
+
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 20px 15px;
+            }
+            button {
+                font-size: 1rem;
+            }
         }
     </style>
+    <script>
+      // Client-side validation for forms
+      document.addEventListener('DOMContentLoaded', () => {
+        const profileForm = document.querySelector('form[name="update_profile"]') || document.forms[0];
+        const passwordForm = document.querySelector('form[name="change_password"]') || document.forms[1];
+
+        profileForm.addEventListener('submit', e => {
+          const fullName = profileForm.full_name.value.trim();
+          const email = profileForm.email.value.trim();
+          const phone = profileForm.phone.value.trim();
+
+          let errors = [];
+
+          if (!fullName) errors.push("Fullname is required.");
+          if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.push("A valid email is required.");
+          if (phone && !phone.match(/^\+?\d{7,15}$/)) errors.push("Phone number is invalid.");
+
+          if (errors.length > 0) {
+            e.preventDefault();
+            alert(errors.join('\n'));
+          }
+        });
+
+        passwordForm.addEventListener('submit', e => {
+          const current = passwordForm.current_password.value.trim();
+          const newPass = passwordForm.new_password.value.trim();
+          const confirmPass = passwordForm.confirm_password.value.trim();
+
+          let errors = [];
+          if (!current || !newPass || !confirmPass) errors.push("All password fields are required.");
+          if (newPass !== confirmPass) errors.push("New password and confirmation do not match.");
+          if (newPass.length < 6) errors.push("New password must be at least 6 characters.");
+
+          if (errors.length > 0) {
+            e.preventDefault();
+            alert(errors.join('\n'));
+          }
+        });
+      });
+    </script>
 </head>
 <body>
 
@@ -175,7 +330,7 @@ if (isset($_POST['change_password'])) {
             <ul class="nav-links">
                 <li><a href="dashboard.php">Dashboard</a></li>
                 <li><a href="profile.php" class="active">Profile</a></li>
-                <li><a href="logout.php" class="btn">Logout</a></li>
+                <li><a href="logout.php">Logout</a></li>
             </ul>
         </nav>
     </div>
@@ -187,7 +342,7 @@ if (isset($_POST['change_password'])) {
         <h2>Update Profile</h2>
 
         <?php if ($errors): ?>
-            <div class="messages error">
+            <div class="messages error" role="alert">
                 <ul>
                     <?php foreach ($errors as $error): ?>
                         <li><?= htmlspecialchars($error) ?></li>
@@ -197,12 +352,12 @@ if (isset($_POST['change_password'])) {
         <?php endif; ?>
 
         <?php if ($success): ?>
-            <div class="messages success"><?= htmlspecialchars($success) ?></div>
+            <div class="messages success" role="alert"><?= htmlspecialchars($success) ?></div>
         <?php endif; ?>
 
-        <form method="POST" action="profile.php" novalidate>
+        <form method="POST" action="profile.php" novalidate name="update_profile">
             <label for="full_name">Fullname</label>
-            <input type="text" id="fullname" name="full_name" required value="<?= htmlspecialchars($user['full_name']) ?>">
+            <input type="text" id="full_name" name="full_name" required value="<?= htmlspecialchars($user['full_name']) ?>">
 
             <label for="email">Email</label>
             <input type="email" id="email" name="email" required value="<?= htmlspecialchars($user['email']) ?>">
@@ -217,7 +372,7 @@ if (isset($_POST['change_password'])) {
 
         <h2>Change Password</h2>
 
-        <form method="POST" action="profile.php" novalidate>
+        <form method="POST" action="profile.php" novalidate name="change_password">
             <label for="current_password">Current Password</label>
             <input type="password" id="current_password" name="current_password" required>
 
@@ -233,7 +388,7 @@ if (isset($_POST['change_password'])) {
     </div>
 </section>
 
-<footer class="footer">
+<footer class="footer" style="background: var(--red-primary); padding: 15px 0; text-align:center; color: var(--off-white); user-select:none;">
     <div class="container">
         <p>&copy; <?= date('Y') ?> SwapRide Kenya. All rights reserved.</p>
     </div>

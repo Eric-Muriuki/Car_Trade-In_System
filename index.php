@@ -12,6 +12,215 @@ session_start(); // Start the session to manage user data
     <link rel="stylesheet" href="assets/css/style.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --red-main: #FE0000;
+            --red-dark: #AF0000;
+            --red-light: #FF9B9B;
+            --cream: #FFFFFA;
+            --navy: #00232A;
+            --maroon: #730000;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--cream);
+            color: var(--navy);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 1rem;
+        }
+
+        .header {
+            background: var(--red-main);
+            color: var(--cream);
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        nav {
+            margin-top: 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            list-style: none;
+            padding: 0;
+            gap: 1rem;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: var(--cream);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .nav-links li a:hover,
+        .nav-links li a.active {
+            background: var(--maroon);
+        }
+
+        .btn {
+            background: var(--navy);
+            color: var(--cream);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+
+        .hero {
+            background: linear-gradient(to right, var(--red-dark), var(--red-main));
+            color: var(--cream);
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+        }
+
+        .hero-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            background: var(--navy);
+            color: var(--cream);
+            border: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .hero-btn:hover {
+            background: var(--maroon);
+        }
+
+        .features {
+            background: var(--cream);
+            padding: 3rem 0;
+        }
+
+        .features h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            background: var(--red-light);
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .feature-item i {
+            font-size: 2rem;
+            color: var(--red-dark);
+            margin-bottom: 1rem;
+        }
+
+        .featured-cars {
+            padding: 3rem 0;
+        }
+
+        .featured-cars h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .car-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .car-card {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .car-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .car-card h3 {
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .car-card p {
+            margin: 0.3rem 0;
+            color: var(--navy);
+        }
+
+        .btn-small {
+            display: inline-block;
+            margin-top: 0.5rem;
+            background: var(--red-dark);
+            color: #fff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+
+        .btn-small:hover {
+            background: var(--red-main);
+        }
+
+        .centered {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .footer {
+            background: var(--navy);
+            color: var(--cream);
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        @media screen and (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .hero h2 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -21,10 +230,10 @@ session_start(); // Start the session to manage user data
             <h1 class="logo">SwapRide Kenya</h1>
             <nav>
                 <ul class="nav-links">
-                    <li><a href="index.php">Home</a></li>
+                    <li><a href="index.php" class="active">Home</a></li>
                     <li><a href="cars.php">Browse Cars</a></li>
                     <li><a href="how_it_works.php">How It Works</a></li>
-                    <li><a href="about.php" class="active">About</a></li>
+                    <li><a href="about.php">About</a></li>
                     <li><a href="contact.php">Contact</a></li>
                     <li><a href="login.php">Login</a></li>
                     <li><a href="register.php" class="btn">Register</a></li>

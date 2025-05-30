@@ -43,74 +43,264 @@ $stmt->execute();
 $result = $stmt->get_result();
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Inventory - Dealer</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/style.css" />
   <style>
+    /* Root colors blending your palette */
+    :root {
+      --red-bright: #FE0000;
+      --red-dark: #AF0000;
+      --cream: #FFFFFA;
+      --pink-light: #FF9B9B;
+      --dark-blue: #00232A;
+      --maroon: #730000;
+
+      --bg-light: var(--cream);
+      --bg-table-header: linear-gradient(135deg, var(--pink-light), var(--maroon));
+      --border-color: var(--maroon);
+      --text-color-dark: var(--dark-blue);
+      --btn-edit-bg: var(--red-dark);
+      --btn-delete-bg: var(--red-bright);
+      --btn-add-bg: var(--dark-blue);
+      --btn-text-color: var(--cream);
+      --row-hover-bg: #ffe6e6; /* light pink blend */
+    }
+
+    /* Reset & base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-color-dark);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
     .container {
-      width: 90%;
+      max-width: 1100px;
       margin: 30px auto;
+      padding: 15px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 18px rgba(115, 0, 0, 0.25);
     }
 
     h2 {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      color: var(--maroon);
+      text-align: center;
+      letter-spacing: 1.1px;
+      font-weight: 700;
     }
 
     .message {
-      padding: 10px;
-      background: #d4edda;
-      color: #155724;
-      margin-bottom: 20px;
-      border-radius: 5px;
+      padding: 14px 18px;
+      background: #dff0d8;
+      color: #3c763d;
+      margin-bottom: 25px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: inset 0 0 8px rgba(50, 100, 50, 0.2);
     }
 
     table {
       width: 100%;
-      border-collapse: collapse;
-      background: #fff;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      box-shadow: 0 0 6px rgba(115, 0, 0, 0.1);
+      background: var(--cream);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    thead tr {
+      background: var(--bg-table-header);
+      color: var(--btn-text-color);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
     }
 
     th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
+      padding: 12px 15px;
       text-align: center;
+      vertical-align: middle;
     }
 
-    th {
-      background: #f2f2f2;
+    tbody tr {
+      background: white;
+      border-radius: 10px;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    tbody tr:hover {
+      background-color: var(--row-hover-bg);
+      cursor: default;
     }
 
     img {
-      width: 100px;
+      width: 110px;
       height: auto;
-      border-radius: 5px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(115,0,0,0.15);
+      transition: transform 0.3s ease;
+    }
+    img:hover {
+      transform: scale(1.05);
     }
 
+    /* Buttons styling */
     .btn {
-      padding: 5px 10px;
+      padding: 8px 16px;
       border: none;
-      border-radius: 4px;
-      color: #fff;
+      border-radius: 6px;
+      color: var(--btn-text-color);
+      font-weight: 600;
       cursor: pointer;
       text-decoration: none;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      user-select: none;
+      display: inline-block;
     }
 
     .edit-btn {
-      background: #3498db;
+      background-color: var(--btn-edit-bg);
+      box-shadow: 0 3px 8px rgba(175, 0, 0, 0.6);
+    }
+    .edit-btn:hover,
+    .edit-btn:focus {
+      background-color: var(--red-bright);
+      box-shadow: 0 4px 12px rgba(254, 0, 0, 0.8);
+      outline: none;
     }
 
     .delete-btn {
-      background: #e74c3c;
+      background-color: var(--btn-delete-bg);
+      box-shadow: 0 3px 8px rgba(254, 0, 0, 0.6);
+      margin-left: 8px;
+    }
+    .delete-btn:hover,
+    .delete-btn:focus {
+      background-color: var(--red-dark);
+      box-shadow: 0 4px 12px rgba(175, 0, 0, 0.8);
+      outline: none;
     }
 
     .add-btn {
-      background: #2ecc71;
+      background-color: var(--btn-add-bg);
+      box-shadow: 0 3px 8px rgba(0, 35, 42, 0.7);
       float: right;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+      padding: 10px 22px;
+      border-radius: 8px;
+    }
+    .add-btn:hover,
+    .add-btn:focus {
+      background-color: var(--maroon);
+      box-shadow: 0 4px 14px rgba(115, 0, 0, 0.85);
+      outline: none;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+      img {
+        width: 90px;
+      }
+      .btn {
+        padding: 7px 14px;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        width: 95%;
+        padding: 10px;
+      }
+      table {
+        font-size: 0.9rem;
+      }
+      img {
+        width: 75px;
+      }
+      .add-btn {
+        float: none;
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      .edit-btn, .delete-btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+      }
+      th, td {
+        padding: 8px 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead tr {
+        display: none;
+      }
+      tbody tr {
+        margin-bottom: 18px;
+        box-shadow: 0 2px 12px rgba(115, 0, 0, 0.1);
+        border-radius: 12px;
+        background: var(--cream);
+        padding: 15px;
+      }
+      tbody tr td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.95rem;
+      }
+      tbody tr td:last-child {
+        border-bottom: none;
+      }
+      tbody tr td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: 700;
+        color: var(--maroon);
+        white-space: nowrap;
+        font-size: 0.9rem;
+      }
+      img {
+        width: 100%;
+        max-width: 200px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+      }
+      .btn {
+        margin: 6px 4px 0 0;
+        width: 48%;
+        font-size: 0.9rem;
+        padding: 8px 0;
+      }
+      .add-btn {
+        width: 100%;
+        margin-bottom: 20px;
+      }
     }
   </style>
 </head>
@@ -122,39 +312,4 @@ $result = $stmt->get_result();
       <div class="message"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
 
-    <a href="add_car.php" class="btn add-btn">+ Add New Car</a>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Photo</th>
-          <th>Make & Model</th>
-          <th>Year</th>
-          <th>Mileage</th>
-          <th>Price (KES)</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php if ($result->num_rows > 0): ?>
-          <?php while ($car = $result->fetch_assoc()): ?>
-            <tr>
-              <td><img src="../uploads/cars/<?= htmlspecialchars($car['photo']) ?>" alt="Car"></td>
-              <td><?= htmlspecialchars($car['make'] . ' ' . $car['model']) ?></td>
-              <td><?= htmlspecialchars($car['year']) ?></td>
-              <td><?= number_format($car['mileage']) ?> km</td>
-              <td>KES <?= number_format($car['price'], 2) ?></td>
-              <td>
-                <a href="edit_car.php?id=<?= $car['id'] ?>" class="btn edit-btn">Edit</a>
-                <a href="?delete=<?= $car['id'] ?>" onclick="return confirm('Are you sure you want to delete this car?');" class="btn delete-btn">Delete</a>
-              </td>
-            </tr>
-          <?php endwhile; ?>
-        <?php else: ?>
-          <tr><td colspan="6">You have no cars listed yet.</td></tr>
-        <?php endif; ?>
-      </tbody>
-    </table>
-  </div>
-</body>
-</html>
+    <a href="

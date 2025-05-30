@@ -4,7 +4,7 @@ require_once '../includes/db_connect.php';
 
 // Ensure admin is logged in
 if (!isset($_SESSION['admin_id'])) {
-    header("Location: ../login.php");
+    header("Location: ../admin/login.php");
     exit();
 }
 
@@ -30,11 +30,17 @@ $total_earnings = $result->fetch_assoc()['total_earnings'] ?? 0;
 $total_earnings = number_format($total_earnings, 2);
 ?>
 
- <style>
-        /* Basic responsive navbar styling */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
         }
         .navbar {
             background-color: #212529;
@@ -64,6 +70,36 @@ $total_earnings = number_format($total_earnings, 2);
         .container {
             padding: 20px;
         }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        .stat-box {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .stat-box h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: #555;
+        }
+        .stat-box p {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .users { color: #007bff; }
+        .dealers { color: #28a745; }
+        .trades { color: #ffc107; }
+        .earnings { color: #dc3545; }
 
         @media (max-width: 768px) {
             .nav-links {
@@ -86,33 +122,32 @@ $total_earnings = number_format($total_earnings, 2);
         <a href="dealers.php">Dealers</a>
         <a href="cars.php">Listings</a>
         <a href="trades.php">Trade Logs</a>
-        <a href="reports.php">Reports</a>
-        <a href="messages.php">Support</a>
-        <a href="settings.php">Settings</a>
         <a href="logout.php" style="color: #dc3545;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </div>
 
-<div class="container" style="max-width: 960px; margin: 40px auto; padding: 20px;">
+<div class="container">
     <h2>Admin Dashboard</h2>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 20px; margin-top: 30px;">
-        <div style="background:#f0f4f8; padding: 20px; border-radius: 8px; text-align:center; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+    <div class="stats-grid">
+        <div class="stat-box users">
             <h3>Total Users</h3>
-            <p style="font-size: 2rem; font-weight: bold; color: #007bff;"><?= $total_users ?></p>
+            <p><?= $total_users ?></p>
         </div>
-        <div style="background:#f0f4f8; padding: 20px; border-radius: 8px; text-align:center; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div class="stat-box dealers">
             <h3>Total Dealers</h3>
-            <p style="font-size: 2rem; font-weight: bold; color: #28a745;"><?= $total_dealers ?></p>
+            <p><?= $total_dealers ?></p>
         </div>
-        <div style="background:#f0f4f8; padding: 20px; border-radius: 8px; text-align:center; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div class="stat-box trades">
             <h3>Completed Trades</h3>
-            <p style="font-size: 2rem; font-weight: bold; color: #ffc107;"><?= $total_trades ?></p>
+            <p><?= $total_trades ?></p>
         </div>
-        <div style="background:#f0f4f8; padding: 20px; border-radius: 8px; text-align:center; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div class="stat-box earnings">
             <h3>Total Earnings (KES)</h3>
-            <p style="font-size: 2rem; font-weight: bold; color: #dc3545;">KES <?= $total_earnings ?></p>
+            <p>KES <?= $total_earnings ?></p>
         </div>
     </div>
 </div>
 
 <?php include '../includes/footer.php'; ?>
+</body>
+</html>

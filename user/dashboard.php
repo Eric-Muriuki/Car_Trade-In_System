@@ -35,99 +35,213 @@ $tradeData = $tradeResult->fetch_assoc();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>User Dashboard - Car Trade-In System</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
+    :root {
+      --red-primary: #FE0000;
+      --red-dark: #AF0000;
+      --red-soft: #FF9B9B;
+      --red-deep: #730000;
+      --whiteish: #FFFFFA;
+      --blue-dark: #00232A;
+      --shadow-light: rgba(254, 0, 0, 0.2);
+      --shadow-medium: rgba(254, 0, 0, 0.4);
+      --shadow-dark: rgba(175, 0, 0, 0.5);
+    }
+
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--blue-dark), var(--red-deep));
+      color: var(--whiteish);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
     }
 
     .container {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      background: var(--whiteish);
+      color: var(--blue-dark);
+      max-width: 900px;
+      width: 100%;
+      border-radius: 14px;
+      padding: 30px 40px;
+      box-shadow:
+        0 8px 24px var(--shadow-medium),
+        inset 0 0 30px var(--red-soft);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .container:hover {
+      box-shadow:
+        0 12px 36px var(--shadow-dark),
+        inset 0 0 40px var(--red-primary);
     }
 
     h2 {
-      color: #333;
-      border-bottom: 2px solid #eee;
-      padding-bottom: 10px;
+      font-weight: 700;
+      font-size: 2rem;
+      margin-bottom: 25px;
+      text-align: center;
+      color: var(--red-deep);
+      text-shadow: 1px 1px 3px var(--red-soft);
     }
 
     .dashboard-card {
-      background: #f9f9f9;
-      padding: 15px 20px;
-      margin: 20px 0;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      background: linear-gradient(135deg, var(--red-soft), var(--red-dark));
+      padding: 20px 25px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow:
+        0 4px 15px var(--shadow-light),
+        inset 0 0 15px var(--red-deep);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .dashboard-card:hover,
+    .dashboard-card:focus-within {
+      transform: translateY(-6px);
+      box-shadow:
+        0 10px 28px var(--shadow-dark),
+        inset 0 0 25px var(--red-primary);
+      outline: none;
     }
 
     .dashboard-card h3 {
-      margin: 0;
-      font-size: 20px;
-      color: #2c3e50;
+      font-size: 1.5rem;
+      color: var(--whiteish);
+      margin-bottom: 10px;
+      font-weight: 700;
+      text-shadow: 1px 1px 2px var(--red-deep);
     }
 
     .dashboard-card p {
-      font-size: 16px;
-      color: #555;
+      font-size: 1.1rem;
+      color: var(--whiteish);
+      margin-bottom: 12px;
+      text-shadow: 1px 1px 2px var(--blue-dark);
+      line-height: 1.4;
     }
 
-    .nav-link {
+    a.nav-link {
       display: inline-block;
-      margin-right: 15px;
-      color: #3498db;
+      padding: 8px 18px;
+      background: var(--whiteish);
+      color: var(--red-dark);
+      border-radius: 8px;
+      font-weight: 600;
       text-decoration: none;
+      box-shadow: 0 4px 8px var(--shadow-light);
+      transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .nav-link:hover {
-      text-decoration: underline;
+    a.nav-link:hover,
+    a.nav-link:focus {
+      background: var(--red-primary);
+      color: var(--whiteish);
+      box-shadow: 0 8px 18px var(--shadow-dark);
+      outline: none;
+      transform: scale(1.05);
+    }
+
+    /* Responsive Styles */
+
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+        align-items: center;
+      }
+      .container {
+        padding: 25px 30px;
+        width: 95%;
+      }
+      .dashboard-card {
+        padding: 18px 20px;
+      }
+      h2 {
+        font-size: 1.7rem;
+        margin-bottom: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .dashboard-card h3 {
+        font-size: 1.3rem;
+      }
+      .dashboard-card p {
+        font-size: 1rem;
+      }
+      a.nav-link {
+        padding: 7px 15px;
+        font-size: 0.9rem;
+      }
+      h2 {
+        font-size: 1.5rem;
+      }
     }
   </style>
+
+  <script>
+    // Accessibility: add keyboard focus styles for nav links
+    document.addEventListener('DOMContentLoaded', () => {
+      const navLinks = document.querySelectorAll('a.nav-link');
+
+      navLinks.forEach(link => {
+        link.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            link.click();
+          }
+        });
+      });
+    });
+  </script>
 </head>
 <body>
-  <div class="container">
+  <div class="container" role="main" aria-label="User Dashboard">
     <h2>Welcome to Your Dashboard</h2>
 
-    <div class="dashboard-card">
-      <h3>My Listed Car</h3>
+    <section class="dashboard-card" tabindex="0" aria-labelledby="myCarHeading" aria-describedby="myCarDesc">
+      <h3 id="myCarHeading">My Listed Car</h3>
       <?php if ($car): ?>
-        <p><strong>Make:</strong> <?= htmlspecialchars($car['make']) ?></p>
-        <p><strong>Model:</strong> <?= htmlspecialchars($car['model']) ?></p>
-        <p><strong>Year:</strong> <?= htmlspecialchars($car['year']) ?></p>
-        <p><strong>Status:</strong> <?= htmlspecialchars($car['status']) ?></p>
-        <a href="my_car.php" class="nav-link">Manage Car</a>
+        <p id="myCarDesc"><strong>Make:</strong> <?= htmlspecialchars($car['make']) ?><br />
+        <strong>Model:</strong> <?= htmlspecialchars($car['model']) ?><br />
+        <strong>Year:</strong> <?= htmlspecialchars($car['year']) ?><br />
+        <strong>Status:</strong> <?= htmlspecialchars($car['status']) ?></p>
+        <a href="my_car.php" class="nav-link" aria-label="Manage your listed car">Manage Car</a>
       <?php else: ?>
-        <p>You have not listed any car yet.</p>
-        <a href="my_car.php" class="nav-link">List My Car</a>
+        <p id="myCarDesc">You have not listed any car yet.</p>
+        <a href="my_car.php" class="nav-link" aria-label="List your car">List My Car</a>
       <?php endif; ?>
-    </div>
+    </section>
 
-    <div class="dashboard-card">
-      <h3>Incoming Offers</h3>
-      <p>You have <strong><?= $offerData['offer_count'] ?></strong> new trade offer(s).</p>
-      <a href="trade_offers.php" class="nav-link">View Offers</a>
-    </div>
+    <section class="dashboard-card" tabindex="0" aria-labelledby="incomingOffersHeading" aria-describedby="incomingOffersDesc">
+      <h3 id="incomingOffersHeading">Incoming Offers</h3>
+      <p id="incomingOffersDesc">You have <strong><?= $offerData['offer_count'] ?></strong> new trade offer(s).</p>
+      <a href="trade_offers.php" class="nav-link" aria-label="View your incoming trade offers">View Offers</a>
+    </section>
 
-    <div class="dashboard-card">
-      <h3>Active Trades</h3>
-      <p>You are involved in <strong><?= $tradeData['trade_count'] ?></strong> ongoing trade(s).</p>
-      <a href="trades.php" class="nav-link">View Trades</a>
-    </div>
+    <section class="dashboard-card" tabindex="0" aria-labelledby="activeTradesHeading" aria-describedby="activeTradesDesc">
+      <h3 id="activeTradesHeading">Active Trades</h3>
+      <p id="activeTradesDesc">You are involved in <strong><?= $tradeData['trade_count'] ?></strong> ongoing trade(s).</p>
+      <a href="trades.php" class="nav-link" aria-label="View your active trades">View Trades</a>
+    </section>
 
-    <div style="margin-top: 30px;">
-      <a href="messages.php" class="nav-link">Messages</a>
-      <a href="documents.php" class="nav-link">Documents</a>
-      <a href="finance.php" class="nav-link">Finance Options</a>
-      <a href="profile.php" class="nav-link">Profile</a>
-      <a href="logout.php" class="nav-link">Logout</a>
-    </div>
+    <nav aria-label="User quick links" style="margin-top: 30px; text-align: center;">
+      <a href="messages.php" class="nav-link" aria-label="View messages">Messages</a>
+      <a href="documents.php" class="nav-link" aria-label="View documents">Documents</a>
+      <a href="finance.php" class="nav-link" aria-label="View finance options">Finance Options</a>
+      <a href="profile.php" class="nav-link" aria-label="View profile">Profile</a>
+      <a href="logout.php" class="nav-link" aria-label="Logout">Logout</a>
+    </nav>
   </div>
 </body>
 </html>

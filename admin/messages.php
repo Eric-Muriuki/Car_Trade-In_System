@@ -4,7 +4,7 @@ require_once '../includes/db_connect.php';
 
 // Admin auth check
 if (!isset($_SESSION['admin_id'])) {
-    header("Location: ../login.php");
+    header("Location: ../admin/login.php");
     exit();
 }
 
@@ -80,7 +80,7 @@ if ($ticket_id) {
 
 } else {
     // List all tickets
-    $tickets_res = $conn->query("SELECT t.id, t.subject, t.status, t.created_at, u.fullname AS user_name, d.business_name AS dealer_name 
+    $tickets_res = $conn->query("SELECT t.id, t.subject, t.status, t.created_at, u.full_name AS user_name, d.business_name AS dealer_name 
                                  FROM support_tickets t
                                  LEFT JOIN users u ON t.user_id = u.id
                                  LEFT JOIN dealers d ON t.dealer_id = d.id
@@ -88,147 +88,378 @@ if ($ticket_id) {
 }
 ?>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Support Messages - Admin Panel</title>
 
- <style>
-        /* Basic responsive navbar styling */
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+<!-- FontAwesome CDN for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    /* Reset & base */
+    * {
+        box-sizing: border-box;
+    }
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #FFFFFA;
+        color: #00232A;
+        line-height: 1.6;
+    }
+    a {
+        color: #FE0000;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    a:hover {
+        color: #AF0000;
+    }
+    /* Navbar */
+    .navbar {
+        background-color: #00232A;
+        padding: 15px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: #FFFFFA;
+        font-weight: 600;
+    }
+    .nav-title {
+        font-size: 1.6rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .nav-title i {
+        color: #FE0000;
+    }
+    .nav-links {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    .nav-links a {
+        padding: 8px 15px;
+        border-radius: 5px;
+        font-weight: 500;
+        background-color: transparent;
+    }
+    .nav-links a:hover {
+        background-color: #FF9B9B;
+        color: #730000;
+    }
+    .nav-links a.logout {
+        background-color: #730000;
+        color: #FFFFFA;
+        font-weight: 700;
+    }
+    .nav-links a.logout:hover {
+        background-color: #FE0000;
+        color: #FFFFFA;
+    }
+
+    /* Container */
+    .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #FFFFFA;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(115, 0, 0, 0.3);
+    }
+    h2, h3 {
+        color: #730000;
+        margin-bottom: 20px;
+    }
+    /* Table styling */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: 0 0 8px rgba(115,0,0,0.15);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    thead {
+        background-color: #FE0000;
+        color: #FFFFFA;
+    }
+    thead tr th {
+        padding: 12px 15px;
+        font-weight: 600;
+        text-align: left;
+    }
+    tbody tr {
+        border-bottom: 1px solid #AF0000;
+        transition: background-color 0.25s ease;
+    }
+    tbody tr:hover {
+        background-color: #FF9B9B;
+        color: #730000;
+        cursor: pointer;
+    }
+    tbody tr td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+    tbody tr td a {
+        font-weight: 600;
+        color: #00232A;
+    }
+    tbody tr td a:hover {
+        color: #FE0000;
+        text-decoration: underline;
+    }
+
+    /* Message container */
+    #message-container {
+        border: 1px solid #AF0000;
+        padding: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+        background: #FF9B9B;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+    #message-container > div {
+        margin-bottom: 15px;
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        word-wrap: break-word;
+        font-size: 0.95rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #message-container > div.admin {
+        background: #D1E7DD;
+        color: #00232A;
+        margin-left: auto;
+        text-align: right;
+    }
+    #message-container > div.user {
+        background: #F8D7DA;
+        color: #730000;
+        margin-right: auto;
+        text-align: left;
+    }
+    #message-container small {
+        font-size: 0.75rem;
+        color: #730000;
+    }
+    #message-container strong {
+        font-weight: 600;
+    }
+
+    /* Reply form */
+    #replyForm textarea {
+        width: 100%;
+        resize: vertical;
+        padding: 12px;
+        font-size: 1rem;
+        border: 2px solid #AF0000;
+        border-radius: 8px;
+        background: #FFFFFA;
+        color: #00232A;
+        transition: border-color 0.3s ease;
+        min-height: 100px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #replyForm textarea:focus {
+        border-color: #FE0000;
+        outline: none;
+    }
+    #replyForm button {
+        margin-top: 12px;
+        padding: 12px 25px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 8px;
+        background-color: #FE0000;
+        color: #FFFFFA;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 5px 10px rgba(254, 0, 0, 0.4);
+        width: 100%;
+        max-width: 200px;
+    }
+    #replyForm button:hover {
+        background-color: #AF0000;
+        box-shadow: 0 5px 12px rgba(175, 0, 0, 0.7);
+    }
+
+    /* Back link */
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #00232A;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+    .back-link:hover {
+        color: #FE0000;
+        text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
         .navbar {
-            background-color: #212529;
-            padding: 14px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #fff;
-        }
-        .navbar a {
-            color: #f8f9fa;
-            text-decoration: none;
-            margin: 0 10px;
-            font-weight: 500;
-        }
-        .navbar a:hover {
-            color: #ffc107;
+            flex-direction: column;
+            gap: 10px;
         }
         .nav-links {
-            display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
         }
-        .nav-title {
-            font-size: 1.4rem;
-            font-weight: bold;
+        .nav-links a {
+            text-align: center;
         }
-        .container {
-            padding: 20px;
+        #message-container {
+            max-height: 300px;
         }
-
-        @media (max-width: 768px) {
-            .nav-links {
-                flex-direction: column;
-                gap: 10px;
-                margin-top: 10px;
-            }
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
 
-<div class="navbar">
-    <div class="nav-title">
-        <i class="fas fa-shield-alt"></i> Admin Panel
-    </div>
+<nav class="navbar">
+    <div class="nav-title"><i class="fa-solid fa-headset"></i> Support Admin Panel</div>
     <div class="nav-links">
-        <a href="dashboard.php">Dashboard</a>
-        <a href="users.php">Users</a>
-        <a href="dealers.php">Dealers</a>
-        <a href="cars.php">Listings</a>
-        <a href="trades.php">Trade Logs</a>
-        <a href="reports.php">Reports</a>
-        <a href="messages.php">Support</a>
-        <a href="settings.php">Settings</a>
-        <a href="logout.php" style="color: #dc3545;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <a href="dashboard.php"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <a href="support_tickets.php"><i class="fa-solid fa-ticket"></i> Tickets</a>
+        <a href="logout.php" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
     </div>
-</div>
+</nav>
 
-<div class="container" style="max-width:900px; margin:40px auto; padding:20px;">
-    <h2>Support Messages - Admin Panel</h2>
+<div class="container">
 
-    <?php if (!$ticket_id): ?>
-        <h3>Support Tickets</h3>
-        <table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse;">
-            <thead style="background:#f5f5f5;">
-                <tr>
-                    <th>ID</th>
-                    <th>Subject</th>
-                    <th>From</th>
-                    <th>Status</th>
-                    <th>Created At</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php while ($row = $tickets_res->fetch_assoc()): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($row['id']) ?></td>
-                        <td><?= htmlspecialchars($row['subject']) ?></td>
-                        <td><?= htmlspecialchars($row['user_name'] ?: $row['dealer_name'] ?: 'Unknown') ?></td>
-                        <td><?= htmlspecialchars($row['status']) ?></td>
-                        <td><?= htmlspecialchars($row['created_at']) ?></td>
-                        <td><a href="?ticket_id=<?= $row['id'] ?>">View & Reply</a></td>
-                    </tr>
-                <?php endwhile; ?>
-                <?php if ($tickets_res->num_rows === 0): ?>
-                    <tr><td colspan="6" style="text-align:center;">No support tickets found</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    <?php else: ?>
-        <a href="messages.php" style="text-decoration:none; margin-bottom:15px; display:inline-block;">&larr; Back to Tickets</a>
-
-        <h3>Ticket #<?= $ticket['id'] ?>: <?= htmlspecialchars($ticket['subject']) ?></h3>
-        <p><strong>From:</strong> <?= htmlspecialchars($ticket['user_name'] ?: $ticket['dealer_name'] ?: 'Unknown') ?></p>
-        <p><strong>Status:</strong> <?= htmlspecialchars($ticket['status']) ?></p>
-        <p><strong>Created At:</strong> <?= htmlspecialchars($ticket['created_at']) ?></p>
-
-        <div id="message-container" style="border:1px solid #ccc; padding:15px; max-height:400px; overflow-y:auto; background:#fafafa; margin-bottom:20px;">
-            <?php while ($msg = $messages->fetch_assoc()): ?>
-                <div style="margin-bottom:15px; <?= $msg['sender_type'] === 'admin' ? 'text-align:right;' : 'text-align:left;' ?>">
-                    <strong><?= ucfirst($msg['sender_type']) ?></strong> <small>(<?= $msg['created_at'] ?>)</small><br>
-                    <div style="display:inline-block; background: <?= $msg['sender_type'] === 'admin' ? '#d1e7dd' : '#f8d7da' ?>; padding:10px; border-radius:10px; max-width:70%;">
-                        <?= nl2br(htmlspecialchars($msg['message'])) ?>
-                    </div>
-                </div>
+<?php if (!$ticket_id): ?>
+    <h2>All Support Tickets</h2>
+    <?php if ($tickets_res->num_rows > 0): ?>
+    <table>
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Customer/Dealer</th>
+                <th>Status</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php while ($t = $tickets_res->fetch_assoc()): ?>
+            <tr onclick="window.location.href='support_messages.php?ticket_id=<?= $t['id'] ?>'">
+                <td><?= htmlspecialchars($t['subject']) ?></td>
+                <td><?= htmlspecialchars($t['user_name'] ?: $t['dealer_name']) ?></td>
+                <td><?= htmlspecialchars(ucfirst($t['status'])) ?></td>
+                <td><?= date("M d, Y H:i", strtotime($t['created_at'])) ?></td>
+            </tr>
             <?php endwhile; ?>
-        </div>
-
-        <form id="replyForm">
-            <input type="hidden" name="ticket_id" value="<?= $ticket['id'] ?>">
-            <textarea name="reply_message" id="reply_message" rows="4" placeholder="Type your reply here..." required style="width:100%; padding:10px;"></textarea>
-            <button type="submit" style="margin-top:10px; padding:10px 20px;">Send Reply</button>
-        </form>
-
-        <script>
-        document.getElementById('replyForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let form = e.target;
-            let formData = new FormData(form);
-            fetch('messages.php?ticket_id=<?= $ticket['id'] ?>', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.json())
-              .then(data => {
-                if(data.success) {
-                    // Reload page to show new message
-                    location.reload();
-                } else {
-                    alert(data.message || 'Error sending reply');
-                }
-              }).catch(() => alert('Request failed'));
-        });
-        </script>
+        </tbody>
+    </table>
+    <?php else: ?>
+        <p>No tickets found.</p>
     <?php endif; ?>
+
+<?php else: ?>
+    <a href="support_messages.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Tickets</a>
+
+    <h3>Ticket: <?= htmlspecialchars($ticket['subject']) ?></h3>
+    <p><strong>From:</strong> <?= htmlspecialchars($ticket['user_name'] ?: $ticket['dealer_name']) ?></p>
+    <p><strong>Status:</strong> <?= htmlspecialchars(ucfirst($ticket['status'])) ?></p>
+    <p><strong>Created:</strong> <?= date("M d, Y H:i", strtotime($ticket['created_at'])) ?></p>
+
+    <div id="message-container" aria-live="polite" aria-atomic="true" role="log">
+        <?php
+        if ($messages->num_rows === 0) {
+            echo "<p><em>No messages yet.</em></p>";
+        } else {
+            while ($msg = $messages->fetch_assoc()):
+                $senderClass = $msg['sender_type'] === 'admin' ? 'admin' : 'user';
+                $senderName = ($msg['sender_type'] === 'admin') ? 'Admin' : (($partner_type === 'user') ? $ticket['user_name'] : $ticket['dealer_name']);
+                $time = date("M d, Y H:i", strtotime($msg['sent_at']));
+                ?>
+                <div class="<?= $senderClass ?>" tabindex="0">
+                    <strong><?= htmlspecialchars($senderName) ?></strong><br />
+                    <?= nl2br(htmlspecialchars($msg['message'])) ?><br />
+                    <small><?= $time ?></small>
+                </div>
+            <?php endwhile; 
+        }
+        ?>
+    </div>
+
+    <form id="replyForm" method="post" action="" autocomplete="off" aria-label="Reply to support ticket">
+        <textarea name="reply_message" id="reply_message" placeholder="Type your reply here..." required aria-required="true" rows="4" spellcheck="true"></textarea>
+        <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>" />
+        <button type="submit" aria-label="Send reply">Send Reply</button>
+    </form>
+<?php endif; ?>
+
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('replyForm');
+    if (!form) return;
+
+    const msgContainer = document.getElementById('message-container');
+    const textarea = form.querySelector('textarea');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const message = textarea.value.trim();
+        if (message === '') {
+            alert('Message cannot be empty');
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                // Append the new message on top
+                const div = document.createElement('div');
+                div.classList.add('admin');
+                div.setAttribute('tabindex', '0');
+
+                const now = new Date();
+                const timeStr = now.toLocaleString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                div.innerHTML = `<strong>Admin</strong><br>${message.replace(/\n/g, '<br>')}<br><small>${timeStr}</small>`;
+
+                msgContainer.appendChild(div);
+                msgContainer.scrollTop = msgContainer.scrollHeight;
+
+                textarea.value = '';
+                textarea.focus();
+            } else {
+                alert(result.message || 'Failed to send reply.');
+            }
+        } catch (err) {
+            alert('Error sending reply.');
+            console.error(err);
+        }
+    });
+});
+</script>
+
+</body>
+</html>
